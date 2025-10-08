@@ -9,21 +9,21 @@ services:
       - "80:80"
       - "443:443"
     volumes:
+      # Statik dosyalar burada mount ediliyor
+      - ./ui/dist:/var/www/ui
       - ./nginx/nginx.conf:/etc/nginx/conf.d/default.conf:ro
-      - ./certbot/www:/var/www/certbot
-      - /etc/letsencrypt:/etc/letsencrypt    # 🔹 Gerçek dizin mount edildi
+      - /etc/letsencrypt:/etc/letsencrypt
     depends_on:
-      - ui
       - api
     networks:
       - app-network
 
   ui:
-    image: salchatech/ui:latest
-    container_name: ui
-    restart: always
-    expose:
-      - "3000"
+    build: ./ui
+    container_name: ui-builder
+    command: ["sh", "-c", "echo 'UI build tamamlandı'"]
+    volumes:
+      - ./ui/dist:/app/dist
     networks:
       - app-network
 
@@ -35,19 +35,6 @@ services:
       - "8080"
     networks:
       - app-network
-
-  certbot:
-    image: certbot/certbot
-    container_name: certbot
-    volumes:
-      - ./certbot/www:/var/www/certbot
-      - /etc/letsencrypt:/etc/letsencrypt     # 🔹 Aynı şekilde burada da
-    entrypoint: >
-      sh -c "certbot certonly --webroot -w /var/www/certbot
-      -d jewelinkry.com
-      --email jewelinkry@gmail.com
-      --agree-tos
-      --noninteractive"
 
 networks:
   app-network:
