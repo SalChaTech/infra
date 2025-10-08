@@ -7,51 +7,29 @@ services:
       - "80:80"
       - "443:443"
     volumes:
-      # Nginx yapılandırması
-      - ./nginx/nginx.conf:/etc/nginx/conf.d/default.conf:ro
-
-      # Let's Encrypt sertifika dizinleri (host’tan)
+      - ./nginx.conf:/etc/nginx/conf.d/default.conf:ro
       - /etc/letsencrypt:/etc/letsencrypt:ro
-
-      # Certbot’un ACME challenge klasörü
-      - ./certbot/www:/var/www/certbot
-
-    depends_on:
-      - ui
-      - api
+      - /var/www/certbot:/var/www/certbot
     networks:
       - app-network
 
   ui:
     image: salchatech/ui:latest
     container_name: ui
-    restart: always
+    restart: unless-stopped
     expose:
-      - "3000"
+      - "80"
     networks:
       - app-network
 
   api:
     image: salchatech/api:latest
     container_name: api
-    restart: always
+    restart: unless-stopped
     expose:
       - "8080"
     networks:
       - app-network
-
-  certbot:
-    image: certbot/certbot
-    container_name: certbot
-    volumes:
-      - ./certbot/www:/var/www/certbot
-      - /etc/letsencrypt:/etc/letsencrypt
-    entrypoint: >
-      sh -c "certbot certonly --webroot -w /var/www/certbot
-      -d jewelinkry.com
-      --email jewelinkry@gmail.com
-      --agree-tos
-      --noninteractive"
 
 networks:
   app-network:
